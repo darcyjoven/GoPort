@@ -1,36 +1,42 @@
 <template>
-  <div class="page-container">
-    <header class="page-header">
-      <div class="left-action-area">
+  <div class="pdfme-rigid-sandbox">
+
+    <div class="editor-control-panel">
+      <div class="panel-left">
         <el-button type="primary" @click="toggleView">
           {{ currentView === 'designer' ? '切换至 JSON 模式' : '切换至 画布模式' }}
         </el-button>
+
+        <el-divider direction="vertical" />
+
+        <template v-if="currentView === 'designer'">
+          <el-button type="primary" plain @click="handleAction('submit')">完成</el-button>
+          <el-button type="warning" plain @click="handleClear">清空</el-button>
+          <el-button type="info" plain @click="handleAction('cancel')">取消</el-button>
+        </template>
+
+        <template v-else-if="currentView === 'json'">
+          <el-button type="primary" plain @click="handleAction('submit')">完成</el-button>
+          <el-button type="info" plain @click="handleAction('cancel')">取消</el-button>
+        </template>
+      </div>
+    </div>
+
+    <div class="editor-viewport-body">
+
+      <div v-show="currentView === 'designer'" class="render-view-isolation">
+        <div ref="designerRootRef" class="pdfme-native-mount-point"></div>
       </div>
 
-      <div class="right-action-area">
-        <div v-show="currentView === 'designer'" class="button-group">
-          <el-button type="primary" size="small" plain @click="handleSave">完成</el-button>
-          <el-button type="warning" size="small" plain @click="handleClear">清空</el-button>
-          <el-button type="info" size="small" plain @click="handleCancel">取消</el-button>
-        </div>
-        <div v-show="currentView === 'json'" class="button-group">
-          <el-button type="primary" size="small" plain @click="handleSave">完成</el-button>
-          <el-button type="info" size="small" plain @click="handleCancel">取消</el-button>
+      <div v-if="currentView === 'json'" class="render-view-isolation json-mode-layout">
+        <div class="editor-tip">💡 提示：您可以直接在下方修改 JSON 字符串，切回画布模式后将自动应用更改。</div>
+        <div class="textarea-container">
+          <el-input v-model="templateJsonString" type="textarea" placeholder="正在实时同步画布 JSON 数据..."
+            class="json-pure-textarea" />
         </div>
       </div>
-    </header>
 
-    <main class="page-body">
-      <div class="content-box">
-        <div v-show="currentView === 'designer'" ref="designerRootRef" class="designer-canvas-container"></div>
-
-        <div v-show="currentView === 'json'" class="json-editor-wrapper">
-          <div class="editor-tip">💡 提示：您可以直接在下方修改 JSON 字符串，切回画布模式后将自动应用更改。</div>
-          <el-input v-model="templateJsonString" type="textarea" autosize placeholder="正在实时同步画布 JSON 数据..."
-            class="json-textarea" />
-        </div>
-      </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -38,72 +44,70 @@
 import { ref, shallowRef, onMounted, onUnmounted, toRaw } from 'vue'
 import { Designer } from '@pdfme/ui'
 import { Template } from '@pdfme/common'
-import { text, image, table, barcodes, line, rectangle, ellipse, dateTime, select, radioGroup, checkbox } from '@pdfme/schemas'
+import {
+  text, image, table, barcodes, line, rectangle, ellipse, dateTime, select, radioGroup,
+  checkbox, multiVariableText, list, svg, signature,date,time
+} from '@pdfme/schemas'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { autoLoadAllFonts } from '@/utils/fontLoader'
 
-// --- 1. 常量与插件配置 ---
-const PDFME_PLUGINS = {
-  text,
-  image,
-  table,
-  qrcode: barcodes.qrcode,
-  line,
-  rectangle,
-  ellipse,
-  dateTime,
-  select,
-  radioGroup,
-  checkbox
-};
-
-// --- 2. 响应式状态管理 ---
-const currentView = ref<'designer' | 'json'>('designer') // 替代原 activeDesign，更具可扩展性
-const designerRootRef = ref<HTMLDivElement | null>(null)
-const designerInstance = shallowRef<Designer | null>(null) // 第三方复杂实例使用 shallowRef 防止 Vue 深度监听导致克隆错误
-
-const templateJsonString = ref('')
-
-// 内部核心维护的 Template 对象（单一事实源）
-const templateData = ref<Template>({
-  basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
-  schemas: [
-    [
-      { name: 'title', type: 'text', position: { x: 10, y: 10 }, width: 100, height: 20 },
-      { name: 'subtitle', type: 'text', position: { x: 10, y: 35 }, width: 100, height: 15 }
-    ]
-  ]
+// --- 1. 组件 Props 定义 ---
+interface Props {
+  modelValue?: Template | null // 外部 v-model 绑定的数据
+}
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: null
 })
 
-// --- 3. 核心数据同步逻辑 ---
+// --- 2. 组件 Emits 定义 ---
+// 通过 actionStatus 完美区分“完成(submit)”与“取消(cancel)”
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: Template): void
+  (e: 'action-completed', data: { actionStatus: 'submit' | 'cancel'; template: Template | null }): void
+}>()
 
-/**
- * 将当前画布的设计数据同步至 JSON 文本变量中
- */
+// --- 3. 基础常量与状态管理 ---
+const PDFME_PLUGINS = {
+  text, dateTime, date, time,
+  multiVariableText, list,
+  select, radioGroup, checkbox, line, rectangle, ellipse,
+  image, table, svg, signature,
+  qrcode: barcodes.qrcode, gs1datamatrix: barcodes.gs1datamatrix,
+  ean13: barcodes.ean13, ean8: barcodes.ean8,
+  code128: barcodes.code128, code39: barcodes.code39, itf14: barcodes.itf14,
+  pdf317: barcodes.pdf417,
+}
+
+const DEFAULT_A4_TEMPLATE: Template = {
+  basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+  schemas: [[
+    { name: 'title', type: 'text', position: { x: 10, y: 10 }, width: 100, height: 20, value: '默认标题' }
+  ]]
+}
+
+const currentView = ref<'designer' | 'json'>('designer')
+const designerRootRef = ref<HTMLDivElement | null>(null)
+const designerInstance = shallowRef<Designer | null>(null)
+const templateJsonString = ref('')
+const localTemplateData = ref<Template>({ basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] }, schemas: [[]] })
+
+// --- 4. 数据核心同步链 ---
 const syncDesignerToText = () => {
   if (!designerInstance.value) return
   const latestTemplate = designerInstance.value.getTemplate()
-  templateData.value = latestTemplate
+  localTemplateData.value = latestTemplate
   templateJsonString.value = JSON.stringify(latestTemplate, null, 2)
 }
 
-/**
- * 将文本框中的 JSON 数据解析并同步至设计器画布中
- */
 const syncTextToDesigner = (): boolean => {
   try {
     const parsedTemplate = JSON.parse(templateJsonString.value) as Template
-
-    // 校验 PDFme 格式合法性基准
     if (!parsedTemplate.basePdf || !parsedTemplate.schemas) {
-      throw new Error("JSON 格式不符合 pdfme 模板规范，必须包含 basePdf 和 schemas 属性。")
+      throw new Error("JSON 格式不合规范，必须包含 basePdf 和 schemas 属性。")
     }
-
-    templateData.value = parsedTemplate
-
+    localTemplateData.value = parsedTemplate
     if (designerInstance.value) {
-      // 深度断开响应式引用（清洗数据），防止响应式代理污染 pdfme 内部
-      const rawTemplate = JSON.parse(JSON.stringify(toRaw(templateData.value)))
-      designerInstance.value.updateTemplate(rawTemplate)
+      designerInstance.value.updateTemplate(JSON.parse(JSON.stringify(toRaw(localTemplateData.value))))
     }
     return true
   } catch (error: any) {
@@ -112,85 +116,75 @@ const syncTextToDesigner = (): boolean => {
   }
 }
 
-/**
- * 视图模式切换开关
- */
 const toggleView = () => {
   if (currentView.value === 'designer') {
-    // 离开画布进入 JSON 视图：先拉取画布数据
     syncDesignerToText()
     currentView.value = 'json'
   } else {
-    // 离开 JSON 进入画布视图：先尝试解析文本
-    const isSuccess = syncTextToDesigner()
-    if (isSuccess) {
+    if (syncTextToDesigner()) {
       currentView.value = 'designer'
       ElMessage.success('数据同步成功，设计画布已重新加载！')
     }
   }
 }
 
-// --- 4. PDFme 实例生命周期控制 ---
-
-/**
- * 初始化 PDFme 设计器
- */
-const initDesigner = (initialTemplate: Template) => {
+// --- 5. 初始化与销毁 ---
+const initDesigner = async (initialTemplate: Template) => {
   if (!designerRootRef.value || designerInstance.value) return
 
-  // 深度断开 Vue 响应式追踪，避免 pdfme 操作 DOM 触发 DataCloneError
-  const pureTemplate = JSON.parse(JSON.stringify(toRaw(initialTemplate)))
-
+  const fontOptions :any = await autoLoadAllFonts()
+  console.log(fontOptions)
   designerInstance.value = new Designer({
     domContainer: designerRootRef.value,
-    template: pureTemplate,
+    template: JSON.parse(JSON.stringify(toRaw(initialTemplate))),
     plugins: PDFME_PLUGINS,
+    options:{
+      font: fontOptions
+    }
   })
 }
 
-// --- 5. 页面顶部操作栏按钮业务回调 ---
+// --- 6. 完成 / 取消 统一控制器 ---
+const handleAction = (status: 'submit' | 'cancel') => {
+  if (status === 'cancel') {
+    emit('action-completed', { actionStatus: 'cancel', template: null })
+    return
+  }
 
-const handleSave = () => {
   if (currentView.value === 'designer') {
     syncDesignerToText()
   } else {
-    const isSuccess = syncTextToDesigner()
-    if (!isSuccess) return
+    if (!syncTextToDesigner()) return
   }
 
-  console.log('最终保存的模板数据对象: ', toRaw(templateData.value))
-  ElMessage.success('模板数据保存成功')
+  const finalData = JSON.parse(JSON.stringify(toRaw(localTemplateData.value)))
+  emit('update:modelValue', finalData)
+  emit('action-completed', { actionStatus: 'submit', template: finalData })
 }
 
 const handleClear = () => {
-  ElMessageBox.confirm('确定要清空当前画布上的所有控件吗？此操作不可撤销。', '提示', {
-    confirmButtonText: '确定清空',
-    cancelButtonText: '取消',
-    type: 'warning'
+  ElMessageBox.confirm('确定要清空当前画布上的所有控件吗？', '提示', {
+    confirmButtonText: '确定清空', cancelButtonText: '取消', type: 'warning'
   }).then(() => {
     if (designerInstance.value) {
-      const emptyTemplate: Template = {
-        basePdf: toRaw(templateData.value.basePdf),
-        schemas: [[]]
-      }
+      const emptyTemplate: Template = { basePdf: toRaw(localTemplateData.value.basePdf), schemas: [[]] }
       designerInstance.value.updateTemplate(emptyTemplate)
-      templateData.value = emptyTemplate
+      localTemplateData.value = emptyTemplate
       templateJsonString.value = JSON.stringify(emptyTemplate, null, 2)
       ElMessage.success('画布已成功清空')
     }
   }).catch(() => { })
 }
 
-const handleCancel = () => {
-  ElMessage.info('已取消操作')
-}
+onMounted(async () => {  
 
-// --- 6. 页面生命周期挂载 ---
-onMounted(() => {
-  // 页面加载完成时同步初始化字符串
-  templateJsonString.value = JSON.stringify(templateData.value, null, 2)
-  // 全局仅执行一次单例初始化
-  initDesigner(templateData.value)
+  if (props.modelValue && props.modelValue.basePdf && props.modelValue.schemas) {
+    localTemplateData.value = JSON.parse(JSON.stringify(toRaw(props.modelValue)))
+  } else {
+    localTemplateData.value = JSON.parse(JSON.stringify(DEFAULT_A4_TEMPLATE))
+  }
+  templateJsonString.value = JSON.stringify(localTemplateData.value, null, 2)
+  initDesigner(localTemplateData.value)
 })
 
 onUnmounted(() => {
@@ -202,73 +196,112 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.page-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
+/* 【降维打击重构】：利用 Grid 彻底替代 Flex 和 Absolute
+  确保无论外部父级是什么妖魔鬼怪环境，本组件在物理上严格限制在可用视口内。
+*/
+.pdfme-rigid-sandbox {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  /* 按钮固定 56px，下方占满剩余空间 */
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
   box-sizing: border-box;
+
+  /* 现代 CSS 特性：强制将其声明为一个独立布局上下文容器，阻止内部溢出影响全局 */
+  container-type: inline-size;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
+/* 1. 上层按钮组区域（刚性块，宽度死死咬住 100%） */
+.editor-control-panel {
+  width: 100%;
+  max-width: 100%;
   background-color: #ffffff;
   border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.left-action-area {
+  box-sizing: border-box;
+  padding: 0 20px;
   display: flex;
-  gap: 12px;
-}
+  align-items: center;
+  overflow: hidden;
 
-.right-action-area {
-  display: flex;
-  flex-direction: row-reverse; // 使得先写的按钮位于最右侧
-
-  .button-group {
+  .panel-left {
     display: flex;
-    flex-direction: row-reverse;
+    align-items: center;
     gap: 12px;
   }
 }
 
-.page-body {
-  flex: 1;
-  padding: 20px;
+/* 2. 下层设计器视口区 
+  【极关键】：Grid 布局下的子项必须配合 min-width: 0 和 min-height: 0
+  否则其尺寸会被内部庞大的 pdfme Canvas 节点强行撑开至 2500px+
+*/
+.editor-viewport-body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+  box-sizing: border-box;
   background-color: #f5f7fa;
   overflow: hidden;
 }
 
-.content-box {
+/* 视口内部单项视图隔离区 */
+.render-view-isolation {
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   background: #ffffff;
   border-radius: 4px;
+  overflow: hidden;
 }
 
-/* JSON 模式下的外部包裹区样式 */
-.json-editor-wrapper {
-  width: 100%;
-  height: calc(100vh - 120px);
+/* 强力镇压 pdfme 渲染引擎向外、向下无节制撑大页面的宿主节点 */
+.pdfme-native-mount-point {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+
+  /* 穿透覆盖 pdfme-designer 自身可能携带的巨幅物理宽度 */
+  :deep(.pdfme-designer) {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+}
+
+/* JSON 模式下的独立纵向排版 */
+.json-mode-layout {
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 16px;
   box-sizing: border-box;
 
   .editor-tip {
-    padding: 10px 15px;
+    padding: 10px 14px;
     font-size: 13px;
     color: #e6a23c;
     background-color: #fdf6ec;
     border-radius: 4px;
     margin-bottom: 12px;
+    flex-shrink: 0;
   }
 
-  .json-textarea {
+  .textarea-container {
     flex: 1;
+    width: 100%;
+    min-height: 0;
+    /* 锁住 textarea，不让其撑开 */
+  }
+
+  .json-pure-textarea {
+    height: 100%;
     font-family: 'Courier New', Courier, monospace;
 
     :deep(.el-textarea__inner) {
@@ -276,20 +309,8 @@ onUnmounted(() => {
       resize: none;
       background-color: #fafafa;
       color: #333333;
+      padding: 12px;
     }
-  }
-}
-
-/* PDFme 画布模式下的宿主节点样式 */
-.designer-canvas-container {
-  width: 100%;
-  height: calc(100vh - 120px);
-  background-color: #f5f7fa;
-
-  // 深度选择器，强行让 pdfme 自有渲染层填满页面容器
-  :deep(.pdfme-designer) {
-    height: 100% !important;
-    width: 100% !important;
   }
 }
 </style>
