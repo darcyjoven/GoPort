@@ -26,8 +26,7 @@
       <div v-if="currentView === 'json'" class="render-view-isolation json-mode-layout">
         <div class="editor-tip">💡 提示：您可以直接在下方修改 JSON 字符串，切回画布模式后将自动应用更改。</div>
         <div class="textarea-container">
-          <el-input v-model="templateJsonString" type="textarea" placeholder="正在实时同步画布 JSON 数据..."
-            class="json-pure-textarea" />
+          <div ref="jsonEditorRef" class="monaco-editor"></div>
         </div>
       </div>
 
@@ -36,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, onUnmounted, toRaw } from 'vue'
+import { ref, shallowRef, onMounted, onUnmounted, toRaw, watch, nextTick } from 'vue'
 import { Designer } from '@pdfme/ui'
 import { Template } from '@pdfme/common'
 import {
@@ -45,6 +44,7 @@ import {
 } from '@pdfme/schemas'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { autoLoadAllFonts } from '@/utils/fontLoader'
+import * as monaco from 'monaco-editor'
 
 // --- 1. 组件 Props 定义 ---
 interface Props {
@@ -83,24 +83,32 @@ const DEFAULT_A4_TEMPLATE: Template = {
 const currentView = ref<'designer' | 'json'>('designer')
 const designerRootRef = ref<HTMLDivElement | null>(null)
 const designerInstance = shallowRef<Designer | null>(null)
+const jsonEditorRef = ref<HTMLElement | null>(null)
 const templateJsonString = ref('')
 const localTemplateData = ref<Template>({ basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] }, schemas: [[]] })
+let jsonEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
 // --- 4. 数据核心同步链 ---
 const syncDesignerToText = () => {
   if (!designerInstance.value) return
   const latestTemplate = designerInstance.value.getTemplate()
   localTemplateData.value = latestTemplate
-  templateJsonString.value = JSON.stringify(latestTemplate, null, 2)
+  const jsonString = JSON.stringify(latestTemplate, null, 2)
+  templateJsonString.value = jsonString
+  if (jsonEditor) {
+    jsonEditor.setValue(jsonString)
+  }
 }
 
 const syncTextToDesigner = (): boolean => {
   try {
-    const parsedTemplate = JSON.parse(templateJsonString.value) as Template
+    const jsonString = jsonEditor ? jsonEditor.getValue() : templateJsonString.value
+    const parsedTemplate = JSON.parse(jsonString) as Template
     if (!parsedTemplate.basePdf || !parsedTemplate.schemas) {
       throw new Error("JSON 格式不合规范，必须包含 basePdf 和 schemas 属性。")
     }
     localTemplateData.value = parsedTemplate
+    templateJsonString.value = jsonString
     if (designerInstance.value) {
       designerInstance.value.updateTemplate(JSON.parse(JSON.stringify(toRaw(localTemplateData.value))))
     }
@@ -115,6 +123,9 @@ const toggleView = () => {
   if (currentView.value === 'designer') {
     syncDesignerToText()
     currentView.value = 'json'
+    nextTick(() => {
+      initJsonEditor()
+    })
   } else {
     if (syncTextToDesigner()) {
       currentView.value = 'designer'
@@ -136,6 +147,29 @@ const initDesigner = async (initialTemplate: Template) => {
     options:{
       font: fontOptions
     }
+  })
+}
+
+const initJsonEditor = () => {
+  if (!jsonEditorRef.value || jsonEditor) return
+
+  jsonEditor = monaco.editor.create(jsonEditorRef.value, {
+    value: templateJsonString.value,
+    language: 'json',
+    theme: 'vs',
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    fontFamily: 'Consolas, "Courier New", monospace',
+    tabSize: 2,
+    insertSpaces: true,
+    lineNumbers: 'on',
+    scrollBeyondLastLine: false,
+    folding: true,
+    foldingHighlight: true,
+    bracketPairColorization: { enabled: true },
+    renderLineHighlight: 'line',
+    padding: { top: 12, bottom: 12 }
   })
 }
 
@@ -165,7 +199,11 @@ const handleClear = () => {
       const emptyTemplate: Template = { basePdf: toRaw(localTemplateData.value.basePdf), schemas: [[]] }
       designerInstance.value.updateTemplate(emptyTemplate)
       localTemplateData.value = emptyTemplate
-      templateJsonString.value = JSON.stringify(emptyTemplate, null, 2)
+      const jsonString = JSON.stringify(emptyTemplate, null, 2)
+      templateJsonString.value = jsonString
+      if (jsonEditor) {
+        jsonEditor.setValue(jsonString)
+      }
       ElMessage.success('画布已成功清空')
     }
   }).catch(() => { })
@@ -186,6 +224,10 @@ onUnmounted(() => {
   if (designerInstance.value) {
     designerInstance.value.destroy()
     designerInstance.value = null
+  }
+  if (jsonEditor) {
+    jsonEditor.dispose()
+    jsonEditor = null
   }
 })
 </script>
@@ -262,17 +304,9 @@ onUnmounted(() => {
     min-height: 0;
   }
 
-  .json-pure-textarea {
+  .monaco-editor {
+    width: 100%;
     height: 100%;
-    font-family: 'Courier New', Courier, monospace;
-
-    :deep(.el-textarea__inner) {
-      height: 100% !important;
-      resize: none;
-      background-color: #fafafa;
-      color: #333333;
-      padding: 12px;
-    }
   }
 }
 </style>
