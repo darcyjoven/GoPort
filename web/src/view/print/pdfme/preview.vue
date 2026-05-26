@@ -1,28 +1,17 @@
 <template>
-    <div class="page-container flex-column">
-        <div class="gva-table-box compact-main flex-1 flex-column">
-
-            <div class="compact-header flex-row justify-between align-center">
-                <div class="left-action-group flex-row align-center">
-                    <span class="page-title">{{ title }}</span>
-                    <el-divider direction="vertical" />
-
-                    <el-button type="primary" icon="Printer" :loading="printLoading" @click="handlePrint">
-                        调用浏览器打印
-                    </el-button>
-
-                    <slot name="extra-actions"></slot>
-                </div>
-
-                <div class="right-action-group">
-                    <slot name="right-actions"></slot>
-                </div>
+    <div class="vtable-container">
+        <div class="toolbar">
+            <el-button type="primary" size="small" icon="Printer" :loading="printLoading" @click="handlePrint">
+                调用浏览器打印
+            </el-button>
+            <slot name="extra-actions"></slot>
+            <div class="right-action-group">
+                <slot name="right-actions"></slot>
             </div>
+        </div>
 
-            <div v-loading="pageLoading" element-loading-text="正在加载字体与渲染预览..." class="viewer-wrapper flex-1">
-                <div ref="viewerRootRef" class="viewer-root"></div>
-            </div>
-
+        <div v-loading="pageLoading" element-loading-text="正在加载字体与渲染预览..." class="table-wrapper">
+            <div ref="viewerRootRef" class="viewer-root"></div>
         </div>
 
         <iframe id="pdf-print-iframe" allow="unload" style="display: none;"></iframe>
@@ -214,75 +203,40 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped lang="scss">
-/* 保持一致的紧凑高集成样式 */
-.page-container {
-    padding: 16px;
-    background-color: #f0f2f5;
-    height: calc(100vh - 110px);
-    box-sizing: border-box;
+<style scoped>
+.vtable-container {
+  width: 100%;
+  height: calc(100vh - 180px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.flex-column {
-    display: flex;
-    flex-direction: column;
+.toolbar {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0 0 0;
 }
 
-.flex-row {
-    display: flex;
-    flex-direction: row;
+.right-action-group {
+  margin-left: auto;
 }
 
-.flex-1 {
-    flex: 1;
-    min-height: 0;
-}
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid #ebf0f5;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+  overflow: auto;
+  position: relative;
+  padding: 12px;
+  box-sizing: border-box;
 
-.justify-between {
-    justify-content: space-between;
-}
-
-.align-center {
-    align-items: center;
-}
-
-.compact-main {
-    background-color: #ffffff;
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
-    overflow: hidden;
-    padding: 0 !important;
-
-    .compact-header {
-        padding: 12px 16px;
-        background-color: #ffffff;
-        border-bottom: 1px solid #e4e7ed;
-
-        .left-action-group {
-            gap: 8px;
-
-            .page-title {
-                font-size: 14px;
-                font-weight: 600;
-                color: #303133;
-            }
-        }
-    }
-
-    .viewer-wrapper {
-        width: 100%;
-        height: 100%;
-        background-color: #f5f7fa;
-        overflow: auto;
-        position: relative;
-        padding: 12px;
-        box-sizing: border-box;
-
-        .viewer-root {
-            width: 100%;
-            height: 100%;
-            min-height: 500px;
-        }
-    }
+  .viewer-root {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+  }
 }
 </style>

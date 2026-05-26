@@ -1,10 +1,10 @@
 <template>
-  <div class="vtable-designer">
+  <div class="vtable-container">
     <!-- 顶部工具栏 -->
     <div class="toolbar">
-      <button @click="handleReset">重置</button>
-      <button @click="handleComplete">完成</button>
-      <button @click="handleCancel">取消</button>
+      <el-button type="info" size="small" plain @click="handleReset">重置</el-button>
+      <el-button type="primary" size="small" plain @click="handleComplete">完成</el-button>
+      <el-button type="warning" size="small" plain @click="handleCancel">取消</el-button>
     </div>
 
     <!-- 主体区域 -->
@@ -231,7 +231,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.vtable-designer {
+.vtable-container {
   width: 100%;
   height: calc(100vh - 180px);
   display: flex;
@@ -242,14 +242,7 @@ onUnmounted(() => {
 .toolbar {
   display: flex;
   gap: 12px;
-  padding: 8px;
-}
-
-.toolbar button {
-  padding: 6px 16px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  cursor: pointer;
+  padding: 8px 0 0 0;
 }
 
 .main-content {

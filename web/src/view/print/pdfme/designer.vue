@@ -1,25 +1,20 @@
 <template>
   <div class="pdfme-rigid-sandbox">
 
-    <div class="editor-control-panel">
-      <div class="panel-left">
-        <el-button type="primary" @click="toggleView">
-          {{ currentView === 'designer' ? '切换至 JSON 模式' : '切换至 画布模式' }}
-        </el-button>
-
-        <el-divider direction="vertical" />
-
-        <template v-if="currentView === 'designer'">
-          <el-button type="primary" plain @click="handleAction('submit')">完成</el-button>
-          <el-button type="warning" plain @click="handleClear">清空</el-button>
-          <el-button type="info" plain @click="handleAction('cancel')">取消</el-button>
-        </template>
-
-        <template v-else-if="currentView === 'json'">
-          <el-button type="primary" plain @click="handleAction('submit')">完成</el-button>
-          <el-button type="info" plain @click="handleAction('cancel')">取消</el-button>
-        </template>
-      </div>
+    <div class="toolbar">
+      <el-button type="primary" size="small" @click="toggleView">
+        {{ currentView === 'designer' ? '切换至 JSON 模式' : '切换至 画布模式' }}
+      </el-button>
+      <el-divider direction="vertical" />
+      <template v-if="currentView === 'designer'">
+        <el-button type="primary" size="small" plain @click="handleAction('submit')">完成</el-button>
+        <el-button type="warning" size="small" plain @click="handleClear">清空</el-button>
+        <el-button type="info" size="small" plain @click="handleAction('cancel')">取消</el-button>
+      </template>
+      <template v-else-if="currentView === 'json'">
+        <el-button type="primary" size="small" plain @click="handleAction('submit')">完成</el-button>
+        <el-button type="info" size="small" plain @click="handleAction('cancel')">取消</el-button>
+      </template>
     </div>
 
     <div class="editor-viewport-body">
@@ -196,55 +191,26 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* 【降维打击重构】：利用 Grid 彻底替代 Flex 和 Absolute
-  确保无论外部父级是什么妖魔鬼怪环境，本组件在物理上严格限制在可用视口内。
-*/
 .pdfme-rigid-sandbox {
-  display: grid;
-  grid-template-rows: 56px 1fr;
-  /* 按钮固定 56px，下方占满剩余空间 */
-  width: 100% !important;
-  max-width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
-  box-sizing: border-box;
-
-  /* 现代 CSS 特性：强制将其声明为一个独立布局上下文容器，阻止内部溢出影响全局 */
-  container-type: inline-size;
-}
-
-/* 1. 上层按钮组区域（刚性块，宽度死死咬住 100%） */
-.editor-control-panel {
   width: 100%;
-  max-width: 100%;
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--el-border-color-light);
-  box-sizing: border-box;
-  padding: 0 20px;
+  height: calc(100vh - 180px);
   display: flex;
-  align-items: center;
-  overflow: hidden;
-
-  .panel-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* 2. 下层设计器视口区 
-  【极关键】：Grid 布局下的子项必须配合 min-width: 0 和 min-height: 0
-  否则其尺寸会被内部庞大的 pdfme Canvas 节点强行撑开至 2500px+
-*/
+.toolbar {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0 0 0;
+  align-items: center;
+}
+
 .editor-viewport-body {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  flex: 1;
   min-height: 0;
-  padding: 16px;
-  box-sizing: border-box;
-  background-color: #f5f7fa;
+  border: 1px solid #ebf0f5;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -254,8 +220,6 @@ onUnmounted(() => {
   height: 100%;
   min-width: 0;
   min-height: 0;
-  background: #ffffff;
-  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -267,7 +231,6 @@ onUnmounted(() => {
   max-height: 100% !important;
   overflow: hidden !important;
 
-  /* 穿透覆盖 pdfme-designer 自身可能携带的巨幅物理宽度 */
   :deep(.pdfme-designer) {
     width: 100% !important;
     height: 100% !important;
@@ -297,7 +260,6 @@ onUnmounted(() => {
     flex: 1;
     width: 100%;
     min-height: 0;
-    /* 锁住 textarea，不让其撑开 */
   }
 
   .json-pure-textarea {
