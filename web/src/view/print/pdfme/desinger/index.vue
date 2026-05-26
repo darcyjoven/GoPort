@@ -8,7 +8,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import PdfmeUniversalEditor from './designer.vue'
+import PdfmeUniversalEditor from '../designer.vue'
 
 const templateData = ref(null)
 
