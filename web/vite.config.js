@@ -9,6 +9,11 @@ import { svgBuilder } from 'vite-auto-import-svg'
 import vueRootValidator from 'vite-check-multiple-dom'
 import { AddSecret } from './vitePlugin/secret'
 import UnoCSS from '@unocss/vite'
+import monacoEditorPluginModule from 'vite-plugin-monaco-editor';
+
+const monacoEditorPlugin = typeof monacoEditorPluginModule === 'function'
+  ? monacoEditorPluginModule
+  : monacoEditorPluginModule.default;
 
 // @see https://cn.vitejs.dev/config/
 export default ({ mode }) => {
@@ -90,7 +95,11 @@ export default ({ mode }) => {
       [Banner(`\n Build based on gin-vue-admin \n Time : ${timestamp}`)],
       VueFilePathPlugin('./src/pathInfo.json'),
       UnoCSS(),
-      vueRootValidator()
+      vueRootValidator(),
+      monacoEditorPlugin({
+        // 如果你只需要特定语言，可以在这里配置以减小打包体积
+        languages: ['json']
+      })
     ]
   }
   return config
