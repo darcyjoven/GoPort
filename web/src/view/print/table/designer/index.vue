@@ -14,20 +14,12 @@
         <el-tabs v-model="activeTab" type="border-card">
           <el-tab-pane label="配置项" name="config">
             <div class="editor-container">
-              <textarea 
-                v-model="configJson"
-                class="json-textarea"
-                rows="20"
-              ></textarea>
+              <div ref="configEditorRef" class="monaco-editor"></div>
             </div>
           </el-tab-pane>
           <el-tab-pane label="数据" name="data">
             <div class="editor-container">
-              <textarea 
-                v-model="dataJson"
-                class="json-textarea"
-                rows="20"
-              ></textarea>
+              <div ref="dataEditorRef" class="monaco-editor"></div>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -53,31 +45,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { ListTable } from '@visactor/vtable'
+import * as monaco from 'monaco-editor'
 
 const activeTab = ref('config')
 const leftWidth = ref(40)
 const isDragging = ref(false)
 
-const configJson = ref(JSON.stringify({
+const defaultConfigJson = JSON.stringify({
   columns: [
     { field: 'name', title: '名称' },
     { field: 'age', title: '年龄' },
     { field: 'gender', title: '性别' },
     { field: 'hobby', title: '爱好' }
   ]
-}, null, 2))
+}, null, 2)
 
-const dataJson = ref(JSON.stringify([
+const defaultDataJson = JSON.stringify([
   { name: '张三', age: 25, gender: '男', hobby: '篮球' },
   { name: '李四', age: 30, gender: '女', hobby: '游泳' },
   { name: '王五', age: 28, gender: '男', hobby: '足球' }
-], null, 2))
+], null, 2)
 
 const jsonError = ref('')
 const tableContainer = ref<HTMLElement | null>(null)
+const configEditorRef = ref<HTMLElement | null>(null)
+const dataEditorRef = ref<HTMLElement | null>(null)
+
 let tableInstance: ListTable | null = null
+let configEditor: monaco.editor.IStandaloneCodeEditor | null = null
+let dataEditor: monaco.editor.IStandaloneCodeEditor | null = null
 
 interface VTableConfig {
   columns: Array<{ field: string; title: string }>
@@ -94,11 +92,16 @@ const validateJson = (jsonString: string) => {
 }
 
 const updateTable = () => {
-  if (!validateJson(configJson.value)) {
+  if (!configEditor || !dataEditor) return
+
+  const configValue = configEditor.getValue()
+  const dataValue = dataEditor.getValue()
+
+  if (!validateJson(configValue)) {
     jsonError.value = '配置JSON格式错误'
     return
   }
-  if (!validateJson(dataJson.value)) {
+  if (!validateJson(dataValue)) {
     jsonError.value = '数据JSON格式错误'
     return
   }
@@ -106,8 +109,8 @@ const updateTable = () => {
   jsonError.value = ''
 
   try {
-    const config: VTableConfig = JSON.parse(configJson.value)
-    const data = JSON.parse(dataJson.value)
+    const config: VTableConfig = JSON.parse(configValue)
+    const data = JSON.parse(dataValue)
 
     if (tableInstance) {
       tableInstance.release()
@@ -127,24 +130,34 @@ const updateTable = () => {
   }
 }
 
-watch([configJson, dataJson], () => {
-  updateTable()
-}, { deep: true })
+const createEditor = (container: HTMLElement, initialValue: string) => {
+  return monaco.editor.create(container, {
+    value: initialValue,
+    language: 'json',
+    theme: 'vs',
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 14,
+    fontFamily: 'Consolas, "Courier New", monospace',
+    tabSize: 2,
+    insertSpaces: true,
+    lineNumbers: 'on',
+    scrollBeyondLastLine: false,
+    folding: true,
+    foldingHighlight: true,
+    bracketPairColorization: { enabled: true },
+    renderLineHighlight: 'line',
+    padding: { top: 12, bottom: 12 }
+  })
+}
 
 const handleReset = () => {
-  configJson.value = JSON.stringify({
-    columns: [
-      { field: 'name', title: '名称' },
-      { field: 'age', title: '年龄' },
-      { field: 'gender', title: '性别' },
-      { field: 'hobby', title: '爱好' }
-    ]
-  }, null, 2)
-  dataJson.value = JSON.stringify([
-    { name: '张三', age: 25, gender: '男', hobby: '篮球' },
-    { name: '李四', age: 30, gender: '女', hobby: '游泳' },
-    { name: '王五', age: 28, gender: '男', hobby: '足球' }
-  ], null, 2)
+  if (configEditor) {
+    configEditor.setValue(defaultConfigJson)
+  }
+  if (dataEditor) {
+    dataEditor.setValue(defaultDataJson)
+  }
 }
 
 const handleComplete = () => {
@@ -182,13 +195,37 @@ const stopDrag = () => {
 }
 
 onMounted(() => {
-  updateTable()
+  nextTick(() => {
+    if (configEditorRef.value) {
+      configEditor = createEditor(configEditorRef.value, defaultConfigJson)
+      configEditor.onDidChangeModelContent(() => {
+        updateTable()
+      })
+    }
+
+    if (dataEditorRef.value) {
+      dataEditor = createEditor(dataEditorRef.value, defaultDataJson)
+      dataEditor.onDidChangeModelContent(() => {
+        updateTable()
+      })
+    }
+
+    updateTable()
+  })
 })
 
 onUnmounted(() => {
   if (tableInstance) {
     tableInstance.release()
     tableInstance = null
+  }
+  if (configEditor) {
+    configEditor.dispose()
+    configEditor = null
+  }
+  if (dataEditor) {
+    dataEditor.dispose()
+    dataEditor = null
   }
 })
 </script>
@@ -219,6 +256,7 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   gap: 12px;
+  min-height: 0;
 }
 
 .left-panel {
@@ -226,6 +264,25 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
+  height: 100%;
+}
+
+.left-panel :deep(.el-tabs) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.left-panel :deep(.el-tabs__content) {
+  flex: 1;
+  overflow: hidden;
+}
+
+.left-panel :deep(.el-tab-pane) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .resizer {
@@ -263,17 +320,13 @@ onUnmounted(() => {
   flex: 1;
   border: 1px solid #ebf0f5;
   border-radius: 4px;
+  overflow: hidden;
+  min-height: 0;
 }
 
-.json-textarea {
+.monaco-editor {
   width: 100%;
   height: 100%;
-  padding: 12px;
-  font-family: monospace;
-  font-size: 14px;
-  border: none;
-  resize: none;
-  box-sizing: border-box;
 }
 
 .error-message {
@@ -286,6 +339,7 @@ onUnmounted(() => {
   flex: 1;
   border: 1px solid #ebf0f5;
   border-radius: 4px;
+  min-height: 0;
 }
 
 .table-wrapper {
