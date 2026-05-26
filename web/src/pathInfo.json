@@ -48,6 +48,7 @@
   "/src/view/print/pdfme/desinger/index.vue": "Index",
   "/src/view/print/pdfme/preview/index.vue": "Index",
   "/src/view/print/pdfme/preview.vue": "Preview",
+  "/src/view/print/table/preview/index.vue": "Index",
   "/src/view/routerHolder.vue": "RouterHolder",
   "/src/view/superAdmin/api/api.vue": "Api",
   "/src/view/superAdmin/authority/authority.vue": "Authority",
