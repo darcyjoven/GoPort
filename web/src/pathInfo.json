@@ -46,6 +46,7 @@
   "/src/view/person/person.vue": "Person",
   "/src/view/print/pdfme/designer.vue": "Designer",
   "/src/view/print/pdfme/index.vue": "Index",
+  "/src/view/print/preview/index.vue": "Index",
   "/src/view/routerHolder.vue": "RouterHolder",
   "/src/view/superAdmin/api/api.vue": "Api",
   "/src/view/superAdmin/authority/authority.vue": "Authority",
