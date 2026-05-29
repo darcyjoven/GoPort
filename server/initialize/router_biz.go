@@ -16,4 +16,9 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 	publicGroup := routers[1]
 
 	holder(publicGroup, privateGroup)
+	{
+		datasourceRouter := router.RouterGroupApp.Datasource
+		datasourceRouter.InitDatabaseConfigRouter(privateGroup, publicGroup)
+		datasourceRouter.InitSearchTemplateRouter(privateGroup, publicGroup)
+	}
 }
