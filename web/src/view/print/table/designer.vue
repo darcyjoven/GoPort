@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick, defineProps, defineEmits } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { ListTable } from '@visactor/vtable'
 import { ElMessage } from 'element-plus'
 import * as monaco from 'monaco-editor'

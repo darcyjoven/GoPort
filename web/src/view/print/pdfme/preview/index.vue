@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="pdfme-preview-page">
     <PdfmeViewer :title="pageTitle" :template-data="currentTemplate" :inputs-data="businessInputs">
       <template #extra-actions>
         <el-button type="success" size="small" @click="changeMockData">
@@ -198,3 +198,10 @@ const changeMockData = () => {
   ElMessage.success('成功切换至最新业务流水数据！')
 }
 </script>
+
+<style scoped>
+.pdfme-preview-page {
+  width: 100%;
+  height: 100%;
+}
+</style>

@@ -3,6 +3,9 @@
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <slot name="toolbar">
+        <el-button size="small" @click="goBack"> <el-icon>
+            <ArrowLeft />
+          </el-icon> 返回 </el-button>
         <el-button type="primary" size="small" plain @click="$emit('complete')">完成</el-button>
         <el-button type="success" size="small" plain @click="handleExport">导出Excel</el-button>
         <el-button type="warning" size="small" plain @click="$emit('cancel')">取消</el-button>
@@ -15,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, defineProps, defineEmits } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { ListTable } from '@visactor/vtable'
 import { exportVTableToExcel, downloadExcel } from '@visactor/vtable-export'
 
@@ -27,6 +30,10 @@ const props = defineProps<{
     headers?: Array<{ field: string; caption: string }>
   }
 }>()
+
+const goBack = () => {
+  history.back()
+}
 
 // --- Emits ---
 const emit = defineEmits<{
@@ -106,8 +113,9 @@ onUnmounted(() => {
 <style scoped>
 .vtable-preview {
   width: 100%;
-  height: calc(100vh - 180px);
+  height: 100%;
   display: flex;
+  padding: 0 20px;
   flex-direction: column;
   gap: 12px;
 }

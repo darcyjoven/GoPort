@@ -1,11 +1,13 @@
 <template>
-  <TablePreview
-    v-model="tableOptions"
-    @complete="handleComplete"
-    @cancel="handleCancel"
-    @export-success="handleExportSuccess"
-    @export-error="handleExportError"
-  />
+  <div class="table-preview-page">
+    <TablePreview
+      v-model="tableOptions"
+      @complete="handleComplete"
+      @cancel="handleCancel"
+      @export-success="handleExportSuccess"
+      @export-error="handleExportError"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -52,3 +54,10 @@ const handleExportError = (error: Error) => {
   console.error('导出失败:', error)
 }
 </script>
+
+<style scoped>
+.table-preview-page {
+  width: 100%;
+  height: 100%;
+}
+</style>

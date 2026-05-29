@@ -1,6 +1,9 @@
 <template>
     <div class="vtable-container">
         <div class="toolbar">
+            <el-button size="small" @click="goBack"> <el-icon>
+                    <ArrowLeft />
+                </el-icon> 返回 </el-button>
             <el-button type="primary" size="small" icon="Printer" :loading="printLoading" @click="handlePrint">
                 调用浏览器打印
             </el-button>
@@ -35,6 +38,10 @@ interface Props {
     templateData?: Template         // 允许外部传入样式模板，不传则使用内置默认
     inputsData?: Record<string, any>[] // 允许外部传入业务数据集，不传则为空
     title?: string                  // 允许自定义标题
+}
+
+const goBack = () => {
+    history.back()
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -205,38 +212,38 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .vtable-container {
-  width: 100%;
-  height: calc(100vh - 180px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .toolbar {
-  display: flex;
-  gap: 12px;
-  padding: 8px 0 0 0;
+    display: flex;
+    gap: 12px;
+    padding: 12px 12px 0 12px;
 }
 
 .right-action-group {
-  margin-left: auto;
+    margin-left: auto;
 }
 
 .table-wrapper {
-  flex: 1;
-  min-height: 0;
-  border: 1px solid #ebf0f5;
-  border-radius: 4px;
-  background-color: #f5f7fa;
-  overflow: auto;
-  position: relative;
-  padding: 12px;
-  box-sizing: border-box;
+    flex: 1;
+    min-height: 0;
+    border: 1px solid #ebf0f5;
+    border-radius: 4px;
+    background-color: #f5f7fa;
+    overflow: auto;
+    position: relative;
+    padding: 0 12px;
+    box-sizing: border-box;
 
-  .viewer-root {
-    width: 100%;
-    height: 100%;
-    min-height: 500px;
-  }
+    .viewer-root {
+        width: 100%;
+        height: 100%;
+        min-height: 500px;
+    }
 }
 </style>
