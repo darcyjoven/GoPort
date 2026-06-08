@@ -1,37 +1,52 @@
-
 <template>
   <div>
     <div class="gva-form-box">
       <el-form :model="formData" ref="elFormRef" label-position="right" :rules="rule" label-width="80px">
         <el-form-item label="模板名称:" prop="name">
-    <el-input v-model="formData.name" :clearable="true" placeholder="请输入模板名称" />
-</el-form-item>
+          <el-input v-model="formData.name" :clearable="true" placeholder="请输入模板名称" />
+        </el-form-item>
         <el-form-item label="数据库配置:" prop="databaseID">
-    <el-select v-model="formData.databaseID" placeholder="请选择数据库配置" filterable style="width:100%" :clearable="false">
-        <el-option v-for="(item,key) in dataSource.databaseID" :key="key" :label="item.label" :value="item.value" />
-    </el-select>
-</el-form-item>
+          <el-select v-model="formData.databaseID" placeholder="请选择数据库配置" filterable style="width:100%"
+            :clearable="false">
+            <el-option v-for="(item, key) in dataSource.databaseID" :key="key" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="查询内容:" prop="searchText">
-    <el-input v-model="formData.searchText" :clearable="true" placeholder="请输入查询内容" />
-</el-form-item>
+          <el-input v-model="formData.searchText" :clearable="true" placeholder="请输入查询内容" />
+        </el-form-item>
         <el-form-item label="备注:" prop="remark">
-    <el-input v-model="formData.remark" :clearable="true" placeholder="请输入备注" />
-</el-form-item>
+          <el-input v-model="formData.remark" :clearable="true" placeholder="请输入备注" />
+        </el-form-item>
         <el-form-item label="参数1默认值:" prop="argv1">
-    <el-input v-model="formData.argv1" :clearable="true" placeholder="请输入参数1默认值" />
-</el-form-item>
+          <el-input v-model="formData.argv1" :clearable="true" placeholder="请输入参数1默认值" />
+        </el-form-item>
         <el-form-item label="参数2默认值:" prop="argv2">
-    <el-input v-model="formData.argv2" :clearable="true" placeholder="请输入参数2默认值" />
-</el-form-item>
+          <el-input v-model="formData.argv2" :clearable="true" placeholder="请输入参数2默认值" />
+        </el-form-item>
         <el-form-item label="参数3默认值:" prop="argv3">
-    <el-input v-model="formData.argv3" :clearable="true" placeholder="请输入参数3默认值" />
-</el-form-item>
+          <el-input v-model="formData.argv3" :clearable="true" placeholder="请输入参数3默认值" />
+        </el-form-item>
         <el-form-item label="参数4默认值:" prop="argv4">
-    <el-input v-model="formData.argv4" :clearable="true" placeholder="请输入参数4默认值" />
-</el-form-item>
+          <el-input v-model="formData.argv4" :clearable="true" placeholder="请输入参数4默认值" />
+        </el-form-item>
         <el-form-item label="参数5默认值:" prop="argv5">
-    <el-input v-model="formData.argv5" :clearable="true" placeholder="请输入参数5默认值" />
-</el-form-item>
+          <el-input v-model="formData.argv5" :clearable="true" placeholder="请输入参数5默认值" />
+        </el-form-item>
+        <el-form-item label="参数6:" prop="argv6">
+          <el-input v-model="formData.argv6" :clearable="true" placeholder="请输入参数6" />
+        </el-form-item>
+        <el-form-item label="参数7:" prop="argv7">
+          <el-input v-model="formData.argv7" :clearable="true" placeholder="请输入参数7" />
+        </el-form-item>
+        <el-form-item label="参数8:" prop="argv8">
+          <el-input v-model="formData.argv8" :clearable="true" placeholder="请输入参数8" />
+        </el-form-item>
+        <el-form-item label="参数9:" prop="argv9">
+          <el-input v-model="formData.argv9" :clearable="true" placeholder="请输入参数9" />
+        </el-form-item>
+        <el-form-item label="参数10:" prop="argv10">
+          <el-input v-model="formData.argv10" :clearable="true" placeholder="请输入参数10" />
+        </el-form-item>
         <el-form-item>
           <el-button :loading="btnLoading" type="primary" @click="save">保存</el-button>
           <el-button type="primary" @click="back">返回</el-button>
@@ -43,14 +58,14 @@
 
 <script setup>
 import {
-    getSearchTemplateDataSource,
+  getSearchTemplateDataSource,
   createSearchTemplate,
   updateSearchTemplate,
   findSearchTemplate
 } from '@/api/datasource/searchTemplate'
 
 defineOptions({
-    name: 'SearchTemplateForm'
+  name: 'SearchTemplateForm'
 })
 
 // 自动获取字典
@@ -68,93 +83,97 @@ const btnLoading = ref(false)
 
 const type = ref('')
 const formData = ref({
-            name: '',
-            databaseID: undefined,
-            searchText: '',
-            remark: '',
-            argv1: '',
-            argv2: '',
-            argv3: '',
-            argv4: '',
-            argv5: '',
-        })
+  name: '',
+  databaseID: undefined,
+  searchText: '',
+  remark: '',
+  argv1: '',
+  argv2: '',
+  argv3: '',
+  argv4: '',
+  argv5: '',
+  argv6: '',
+  argv7: '',
+  argv8: '',
+  argv9: '',
+  argv10: '',
+})
 // 验证规则
 const rule = reactive({
-               name : [{
-                   required: true,
-                   message: '',
-                   trigger: ['input','blur'],
-               }],
-               databaseID : [{
-                   required: true,
-                   message: '',
-                   trigger: ['input','blur'],
-               }],
-               searchText : [{
-                   required: true,
-                   message: '',
-                   trigger: ['input','blur'],
-               }],
+  name: [{
+    required: true,
+    message: '',
+    trigger: ['input', 'blur'],
+  }],
+  databaseID: [{
+    required: true,
+    message: '',
+    trigger: ['input', 'blur'],
+  }],
+  searchText: [{
+    required: true,
+    message: '',
+    trigger: ['input', 'blur'],
+  }],
 })
 
 const elFormRef = ref()
-  const dataSource = ref([])
-  const getDataSourceFunc = async()=>{
-    const res = await getSearchTemplateDataSource()
-    if (res.code === 0) {
-      dataSource.value = res.data
-    }
+const dataSource = ref([])
+const getDataSourceFunc = async () => {
+  const res = await getSearchTemplateDataSource()
+  if (res.code === 0) {
+    dataSource.value = res.data
   }
-  getDataSourceFunc()
+}
+getDataSourceFunc()
 
 // 初始化方法
 const init = async () => {
- // 建议通过url传参获取目标数据ID 调用 find方法进行查询数据操作 从而决定本页面是create还是update 以下为id作为url参数示例
-    if (route.query.id) {
-      const res = await findSearchTemplate({ ID: route.query.id })
-      if (res.code === 0) {
-        formData.value = res.data
-        type.value = 'update'
-      }
-    } else {
-      type.value = 'create'
+  // 建议通过url传参获取目标数据ID 调用 find方法进行查询数据操作 从而决定本页面是create还是update 以下为id作为url参数示例
+  if (route.query.id) {
+    const res = await findSearchTemplate({ ID: route.query.id })
+    if (res.code === 0) {
+      formData.value = res.data
+      type.value = 'update'
     }
+  } else {
+    type.value = 'create'
+  }
 }
 
 init()
 // 保存按钮
-const save = async() => {
-      btnLoading.value = true
-      elFormRef.value?.validate( async (valid) => {
-         if (!valid) return btnLoading.value = false
-            let res
-           switch (type.value) {
-             case 'create':
-               res = await createSearchTemplate(formData.value)
-               break
-             case 'update':
-               res = await updateSearchTemplate(formData.value)
-               break
-             default:
-               res = await createSearchTemplate(formData.value)
-               break
-           }
-           btnLoading.value = false
-           if (res.code === 0) {
-             ElMessage({
-               type: 'success',
-               message: '创建/更改成功'
-             })
-           }
-       })
+const save = async () => {
+  btnLoading.value = true
+  elFormRef.value?.validate(async (valid) => {
+    if (!valid) return btnLoading.value = false
+    let res
+    switch (type.value) {
+      case 'create':
+        res = await createSearchTemplate(formData.value)
+        break
+      case 'update':
+        res = await updateSearchTemplate(formData.value)
+        break
+      default:
+        res = await createSearchTemplate(formData.value)
+        break
+    }
+    btnLoading.value = false
+    if (res.code === 0) {
+      ElMessage({
+        type: 'success',
+        message: '创建/更改成功'
+      })
+    }
+  })
 }
 
 // 返回按钮
 const back = () => {
-    router.go(-1)
+  router.go(-1)
 }
 
 </script>
 
-<style>
-</style>
+<style></style>

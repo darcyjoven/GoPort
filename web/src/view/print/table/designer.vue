@@ -82,10 +82,10 @@ const isDragging = ref(false)
 
 const defaultConfigJson = JSON.stringify({
   columns: [
-    { field: 'name', title: '名称' },
-    { field: 'age', title: '年龄' },
-    { field: 'gender', title: '性别' },
-    { field: 'hobby', title: '爱好' }
+    { field: 'name', title: '名称', sort: true },
+    { field: 'age', title: '年龄', sort: true },
+    { field: 'gender', title: '性别', sort: true },
+    { field: 'hobby', title: '爱好', sort: true }
   ]
 }, null, 2)
 
@@ -150,7 +150,7 @@ const updateTable = (showMessage = false) => {
         container: tableContainer.value,
         columns: config.columns,
         records: data,
-        defaultRowHeight: 36
+        multipleSort: true
       })
     }
 
@@ -252,14 +252,14 @@ const startDrag = (e: MouseEvent) => {
 
 const onDrag = (e: MouseEvent) => {
   if (!isDragging.value) return
-  
+
   const container = document.querySelector('.main-content') as HTMLElement
   if (!container) return
-  
+
   const rect = container.getBoundingClientRect()
   const x = e.clientX - rect.left
   const percentage = (x / rect.width) * 100
-  
+
   leftWidth.value = Math.max(20, Math.min(70, percentage))
 }
 
@@ -274,30 +274,30 @@ watch(() => props.modelValue, (newVal) => {
   if (newVal && configEditor && dataEditor) {
     const currentConfig = configEditor.getValue()
     const currentData = dataEditor.getValue()
-    
+
     if (currentConfig !== newVal.config) {
       configEditor.setValue(newVal.config)
     }
     if (currentData !== newVal.data) {
       dataEditor.setValue(newVal.data)
     }
-    
+
     // 直接更新表格，不调用 updateTable 避免循环
     try {
       const config: VTableConfig = JSON.parse(newVal.config)
       const data = JSON.parse(newVal.data)
-      
+
       if (tableInstance) {
         tableInstance.release()
         tableInstance = null
       }
-      
+
       if (tableContainer.value) {
         tableInstance = new ListTable({
           container: tableContainer.value,
           columns: config.columns,
           records: data,
-          defaultRowHeight: 36
+          multipleSort: true
         })
       }
     } catch (e) {
@@ -315,12 +315,12 @@ onMounted(() => {
     if (tableContainer.value) {
       const config: VTableConfig = JSON.parse(configValue)
       const data = JSON.parse(dataValue)
-      
+
       tableInstance = new ListTable({
         container: tableContainer.value,
         columns: config.columns,
         records: data,
-        defaultRowHeight: 36
+        multipleSort: true
       })
     }
   })

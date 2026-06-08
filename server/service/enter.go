@@ -3,7 +3,9 @@ package service
 import (
 	"github.com/flipped-aurora/gin-vue-admin/server/service/datasource"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/example"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/pdfme"
 	"github.com/flipped-aurora/gin-vue-admin/server/service/system"
+	"github.com/flipped-aurora/gin-vue-admin/server/service/vtable"
 )
 
 var ServiceGroupApp = new(ServiceGroup)
@@ -12,4 +14,6 @@ type ServiceGroup struct {
 	SystemServiceGroup     system.ServiceGroup
 	ExampleServiceGroup    example.ServiceGroup
 	DatasourceServiceGroup datasource.ServiceGroup
+	VtableServiceGroup     vtable.ServiceGroup
+	PdfmeServiceGroup      pdfme.ServiceGroup
 }

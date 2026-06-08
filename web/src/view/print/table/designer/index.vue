@@ -1,10 +1,5 @@
 <template>
-  <TableDesigner
-    v-model="tableData"
-    @reset="handleReset"
-    @cancel="handleCancel"
-    @complete="handleComplete"
-  />
+  <TableDesigner v-model="tableData" @reset="handleReset" @cancel="handleCancel" @complete="handleComplete" />
 </template>
 
 <script setup lang="ts">
@@ -14,8 +9,8 @@ import TableDesigner from '../designer.vue'
 const tableData = ref({
   config: JSON.stringify({
     columns: [
-      { field: 'name', title: '名称' },
-      { field: 'age', title: '年龄' },
+      { field: 'name', title: '名称', sort: true },
+      { field: 'age', title: '年龄', sort: true },
       { field: 'gender', title: '性别' },
       { field: 'hobby', title: '爱好' }
     ]
