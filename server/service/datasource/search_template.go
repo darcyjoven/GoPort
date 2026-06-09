@@ -125,3 +125,10 @@ func (searchTempService *SearchTemplateService) GetSearchTemplatePublic(ctx cont
 	// 此方法为获取数据源定义的数据
 	// 请自行实现
 }
+
+// 查询ima_file示例接口 SearchIma
+func (searchTempService *SearchTemplateService) SearchIma(ctx context.Context) (err error) {
+	// 请在这里实现自己的业务逻辑
+	db := global.GVA_DB.Model(&datasource.SearchTemplate{})
+	return db.Error
+}

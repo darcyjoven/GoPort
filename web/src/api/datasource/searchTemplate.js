@@ -121,3 +121,16 @@ export const getSearchTemplatePublic = () => {
     method: 'get',
   })
 }
+// 查询ima_file示例接口 SearchIma
+// @Tags SearchTemplate
+// @Summary SearchIma
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=object,msg=string} "成功"
+// @Router /searchTemp/searchIma [GET]
+export const searchIma = () => {
+  return service({
+    url: '/searchTemp/searchIma',
+    method: 'GET'
+  })
+}
