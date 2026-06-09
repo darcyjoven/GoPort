@@ -9,7 +9,7 @@ import (
 
 func bizModel() error {
 	db := global.GVA_DB
-	err := db.AutoMigrate(datasource.DatabaseConfig{}, datasource.SearchTemplate{}, datasource.DataSourceField{}, vtable.VTableDesign{}, vtable.VTableHistory{}, pdfme.PdfmeDesign{}, pdfme.PdfmeHistory{}, datasource.APISource{}, datasource.FileSource{}, datasource.FileField{})
+	err := db.AutoMigrate(datasource.DataSourceField{}, vtable.VTableDesign{}, vtable.VTableHistory{}, pdfme.PdfmeDesign{}, pdfme.PdfmeHistory{}, datasource.APISource{}, datasource.FileSource{}, datasource.FileField{}, datasource.SearchTemplate{})
 	if err != nil {
 		return err
 	}

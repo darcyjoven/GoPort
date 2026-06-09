@@ -18,15 +18,6 @@
           <el-date-picker v-model="searchInfo.createdAtRange" class="!w-380px" type="datetimerange" range-separator="至"
             start-placeholder="开始时间" end-placeholder="结束时间" />
         </el-form-item>
-
-        <el-form-item label="数据库配置" prop="databaseID">
-          <el-select v-model="searchInfo.databaseID" filterable placeholder="请选择数据库配置" :clearable="false">
-            <el-option v-for="(item, key) in dataSource.databaseID" :key="key" :label="item.label"
-              :value="item.value" />
-          </el-select>
-        </el-form-item>
-
-
         <template v-if="showAllQuery">
           <!-- 将需要控制显示状态的查询条件添加到此范围内 -->
           <el-form-item label="模板名称" prop="name">
@@ -111,10 +102,9 @@
         </el-table-column>
 
         <el-table-column align="left" label="模板名称" prop="name" width="120" />
-
-        <el-table-column align="left" label="数据库配置" prop="databaseID" width="120">
+        <el-table-column align="left" label="数据源" prop="databaseSource" width="120">
           <template #default="scope">
-            <span>{{ filterDataSource(dataSource.databaseID, scope.row.databaseID) }}</span>
+            {{ filterDict(scope.row.databaseSource, other_databaseOptions) }}
           </template>
         </el-table-column>
         <el-table-column align="left" label="查询内容" prop="searchText" width="120" />
@@ -176,12 +166,9 @@
         <el-form-item label="模板名称:" prop="name">
           <el-input v-model="formData.name" :clearable="true" placeholder="请输入模板名称" />
         </el-form-item>
-        <el-form-item label="数据库配置:" prop="databaseID">
-          <el-select v-model="formData.databaseID" placeholder="请选择数据库配置" filterable style="width:100%"
-            :clearable="false">
-            <el-option v-for="(item, key) in dataSource.databaseID" :key="key" :label="item.label"
-              :value="item.value" />
-          </el-select>
+        <el-form-item label="数据源:" prop="databaseSource">
+          <el-tree-select v-model="formData.databaseSource" placeholder="请选择数据源" :data="other_databaseOptions"
+            style="width:100%" filterable :clearable="true" check-strictly></el-tree-select>
         </el-form-item>
         <el-form-item label="查询内容:" prop="searchText">
           <el-input v-model="formData.searchText" :clearable="true" placeholder="请输入查询内容" />
@@ -228,10 +215,8 @@
         <el-descriptions-item label="模板名称">
           {{ detailForm.name }}
         </el-descriptions-item>
-        <el-descriptions-item label="数据库配置">
-          <template #default="scope">
-            <span>{{ filterDataSource(dataSource.databaseID, detailForm.databaseID) }}</span>
-          </template>
+        <el-descriptions-item label="数据源">
+          {{ detailForm.databaseSource }}
         </el-descriptions-item>
         <el-descriptions-item label="查询内容">
           {{ detailForm.searchText }}
@@ -312,9 +297,10 @@ const appStore = useAppStore()
 const showAllQuery = ref(false)
 
 // 自动化生成的字典（可能为空）以及字段
+const other_databaseOptions = ref([])
 const formData = ref({
   name: '',
-  databaseID: undefined,
+  databaseSource: undefined,
   searchText: '',
   remark: '',
   argv1: '',
@@ -352,7 +338,7 @@ const rule = reactive({
     trigger: ['input', 'blur'],
   }
   ],
-  databaseID: [{
+  databaseSource: [{
     required: true,
     message: '',
     trigger: ['input', 'blur'],
@@ -424,6 +410,7 @@ getTableData()
 
 // 获取需要的字典 可能为空 按需保留
 const setOptions = async () => {
+    other_databaseOptions.value = await getDictFunc('other_database')
 }
 
 // 获取需要的字典 可能为空 按需保留
@@ -524,7 +511,7 @@ const closeDialog = () => {
   dialogFormVisible.value = false
   formData.value = {
     name: '',
-    databaseID: undefined,
+    databaseSource: '',
     searchText: '',
     remark: '',
     argv1: '',

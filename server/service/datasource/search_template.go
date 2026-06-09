@@ -61,8 +61,8 @@ func (searchTempService *SearchTemplateService) GetSearchTemplateInfoList(ctx co
 	if info.Name != nil && *info.Name != "" {
 		db = db.Where("name LIKE ?", "%"+*info.Name+"%")
 	}
-	if info.DatabaseID != nil {
-		db = db.Where("database_id = ?", *info.DatabaseID)
+	if info.DatabaseSource != nil {
+		db = db.Where("database_id = ?", *info.DatabaseSource)
 	}
 	if info.SearchText != nil && *info.SearchText != "" {
 		db = db.Where("search_text LIKE ?", "%"+*info.SearchText+"%")
@@ -115,10 +115,10 @@ func (searchTempService *SearchTemplateService) GetSearchTemplateInfoList(ctx co
 func (searchTempService *SearchTemplateService) GetSearchTemplateDataSource(ctx context.Context) (res map[string][]map[string]any, err error) {
 	res = make(map[string][]map[string]any)
 
-	databaseID := make([]map[string]any, 0)
+	databaseSource := make([]map[string]any, 0)
 
-	global.GVA_DB.Table("database_config").Where("deleted_at IS NULL").Select("name as label,id as value").Scan(&databaseID)
-	res["databaseID"] = databaseID
+	global.GVA_DB.Table("database_config").Where("deleted_at IS NULL").Select("name as label,id as value").Scan(&databaseSource)
+	res["databaseSource"] = databaseSource
 	return
 }
 func (searchTempService *SearchTemplateService) GetSearchTemplatePublic(ctx context.Context) {

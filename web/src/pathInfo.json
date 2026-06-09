@@ -13,8 +13,6 @@
   "/src/view/dashboard/index.vue": "Dashboard",
   "/src/view/datasource/apiSource/apiSource.vue": "APISource",
   "/src/view/datasource/apiSource/apiSourceForm.vue": "APISourceForm",
-  "/src/view/datasource/databaseConfig/databaseConfig.vue": "DatabaseConfig",
-  "/src/view/datasource/databaseConfig/databaseConfigForm.vue": "DatabaseConfigForm",
   "/src/view/datasource/dataSourceField/dataSourceField.vue": "DataSourceField",
   "/src/view/datasource/dataSourceField/dataSourceFieldForm.vue": "DataSourceFieldForm",
   "/src/view/datasource/fileField/fileField.vue": "FileField",

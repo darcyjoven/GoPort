@@ -18,14 +18,13 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 	holder(publicGroup, privateGroup)
 	{
 		datasourceRouter := router.RouterGroupApp.Datasource
-		datasourceRouter.InitDatabaseConfigRouter(privateGroup, publicGroup)
 		datasourceRouter.InitSearchTemplateRouter(privateGroup, publicGroup)
 		datasourceRouter.InitDataSourceFieldRouter(privateGroup, publicGroup)
 		datasourceRouter.InitAPISourceRouter(privateGroup, publicGroup)
 		datasourceRouter.InitFileSourceRouter(privateGroup, publicGroup)
 		datasourceRouter.InitFileFieldRouter(privateGroup, publicGroup)
-
 	}
+
 	{
 		vtableRouter := router.RouterGroupApp.Vtable
 		vtableRouter.InitVTableDesignRouter(privateGroup, publicGroup)
@@ -36,4 +35,5 @@ func initBizRouter(routers ...*gin.RouterGroup) {
 		pdfmeRouter.InitPdfmeDesignRouter(privateGroup, publicGroup)
 		pdfmeRouter.InitPdfmeHistoryRouter(privateGroup, publicGroup)
 	}
+
 }

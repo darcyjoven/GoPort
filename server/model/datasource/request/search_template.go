@@ -9,7 +9,7 @@ import (
 type SearchTemplateSearch struct {
 	CreatedAtRange []time.Time `json:"createdAtRange" form:"createdAtRange[]"`
 	Name           *string     `json:"name" form:"name"`
-	DatabaseID     *int        `json:"databaseID" form:"databaseID"`
+	DatabaseSource *string     `json:"databaseSource" form:"databaseSource"`
 	SearchText     *string     `json:"searchText" form:"searchText"`
 	Remark         *string     `json:"remark" form:"remark"`
 	Argv1          *string     `json:"argv1" form:"argv1"`
